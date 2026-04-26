@@ -2,9 +2,12 @@ package storage
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
+	"time"
 )
 
 type Article struct {
@@ -45,4 +48,26 @@ func GetAll() ([]Article, error) {
 	})
 
 	return articles, nil
+}
+
+// create or upodate un article
+func Save(a *Article) error {
+	if a.ID == 0 {
+		// gen a ID based on timestamp
+		a.ID = int(time.Now().Unix())
+		a.PublishedAt = time.Now().Format("2006-01-02T15:04:05Z")
+	}
+
+	data, err := json.MarshalIndent(a, "", "	")
+	if err != nil {
+		return err
+	}
+
+	path := filepath.Join(articlesDir, strconv.Itoa(a.ID)+".json")
+	return os.WriteFile(path, data, 0644)
+}
+
+func Delete(id int) error {
+	path := filepath.Join(articlesDir, fmt.Sprintf("%d.json", id))
+	return os.Remove(path)
 }
